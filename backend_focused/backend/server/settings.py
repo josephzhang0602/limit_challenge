@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'django_filters',
     'fleet',
 ]
 
@@ -126,17 +127,19 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'fleet.pagination.StandardPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
-}
-
-JSON_UNDERSCOREIZE = {
-    'no_underscore_before_number': True,
+    # The challenge examples show costs as JSON numbers (81250.50), not strings.
+    'COERCE_DECIMAL_TO_STRING': False,
+    'EXCEPTION_HANDLER': 'fleet.exceptions.api_exception_handler',
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
