@@ -1,5 +1,8 @@
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import AppShell from '@/components/AppShell';
+
 import Providers from './providers';
 import './globals.css';
 
@@ -14,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Fleet Tracker Challenge',
-  description: 'Frontend scaffold for the take-home assignment',
+  title: 'Fleet Tracker',
+  description: 'Vehicles, offices, mechanics and maintenance history of the fleet',
 };
 
 export default function RootLayout({
@@ -26,7 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        {/* Sends the Material UI styles with the HTML of the server, so the
+            browser receives the same markup that React renders. */}
+        <AppRouterCacheProvider>
+          <Providers>
+            <AppShell>{children}</AppShell>
+          </Providers>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
