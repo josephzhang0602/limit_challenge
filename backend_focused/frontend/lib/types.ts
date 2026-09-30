@@ -68,6 +68,8 @@ export interface Vehicle {
   is_active: boolean;
   office: Office;
   last_maintenance: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface VehiclePayload {

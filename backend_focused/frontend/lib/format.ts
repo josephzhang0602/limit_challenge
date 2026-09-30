@@ -22,6 +22,17 @@ export function formatDate(value: string | null) {
   });
 }
 
+/** Format an API date and time (ISO 8601), in the time zone of the user. */
+export function formatDateTime(value: string) {
+  return new Date(value).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 /** The number in a form input, or `undefined` when the input is empty. */
 export function optionalNumber(value: string) {
   return value.trim() === '' ? undefined : Number(value);
