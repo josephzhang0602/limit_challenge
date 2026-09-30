@@ -1,7 +1,9 @@
+import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import AppShell from '@/components/AppShell';
+
+import AppShell from '@/components/layout/AppShell';
 
 import Providers from './providers';
 import './globals.css';
@@ -27,8 +29,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    // The color scheme script sets a class on <html> before React loads, which
+    // React did not render: suppressHydrationWarning accepts that difference.
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full flex flex-col">
+        {/* Applies the saved color scheme before the first paint, so a user of
+            dark mode never sees a white flash. */}
+        <InitColorSchemeScript attribute="class" defaultMode="system" />
         {/* Sends the Material UI styles with the HTML of the server, so the
             browser receives the same markup that React renders. */}
         <AppRouterCacheProvider>

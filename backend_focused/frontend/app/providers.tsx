@@ -1,32 +1,14 @@
 'use client';
 
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { PropsWithChildren, useMemo, useState } from 'react';
+import { CssBaseline, ThemeProvider } from '@mui/material';
+import { PropsWithChildren, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import NotificationProvider from '@/components/NotificationProvider';
 import { parseApiError } from '@/lib/errors';
-
-function useTheme() {
-  return useMemo(
-    () =>
-      createTheme({
-        palette: {
-          primary: {
-            main: '#0f62fe',
-          },
-          background: {
-            default: '#f5f7fb',
-          },
-        },
-        shape: { borderRadius: 8 },
-      }),
-    [],
-  );
-}
+import { theme } from '@/lib/theme';
 
 export default function Providers({ children }: PropsWithChildren) {
-  const theme = useTheme();
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -46,8 +28,9 @@ export default function Providers({ children }: PropsWithChildren) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      {/* The chosen color scheme is kept in localStorage by Material UI. */}
+      <ThemeProvider theme={theme} defaultMode="system">
+        <CssBaseline enableColorScheme />
         <NotificationProvider>{children}</NotificationProvider>
       </ThemeProvider>
     </QueryClientProvider>
