@@ -19,7 +19,7 @@ class UpperCaseCharField(serializers.CharField):
 class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Office
-        fields = ["id", "name", "city"]
+        fields = ["id", "name", "city", "created_at", "updated_at"]
 
 
 class OfficeSummarySerializer(serializers.ModelSerializer):
@@ -52,7 +52,14 @@ class MechanicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Mechanic
-        fields = ["id", "name", "certification_number", "is_active"]
+        fields = [
+            "id",
+            "name",
+            "certification_number",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class MechanicWorkloadSerializer(serializers.ModelSerializer):
@@ -104,6 +111,8 @@ class VehicleSerializer(serializers.ModelSerializer):
             "office",
             "office_id",
             "last_maintenance",
+            "created_at",
+            "updated_at",
         ]
 
     def validate_year(self, value):
@@ -159,6 +168,8 @@ class MaintenanceRecordSerializer(serializers.ModelSerializer):
             "maintenance_type",
             "cost",
             "notes",
+            "created_at",
+            "updated_at",
         ]
 
     def validate_maintenance_date(self, value):
@@ -209,6 +220,8 @@ class VehicleDetailSerializer(serializers.ModelSerializer):
             "office",
             "last_maintenance",
             "maintenance_history",
+            "created_at",
+            "updated_at",
         ]
 
 
@@ -222,6 +235,12 @@ class AssignVehicleSerializer(serializers.Serializer):
         if vehicle.office_id == office.pk:
             raise serializers.ValidationError("Vehicle is already assigned to this office.")
         return office
+
+
+class DuplicateCheckResultSerializer(serializers.Serializer):
+    conflicts = serializers.ListField(
+        child=serializers.ChoiceField(choices=["vin", "license_plate"])
+    )
 
 
 class DuplicateCheckSerializer(serializers.Serializer):

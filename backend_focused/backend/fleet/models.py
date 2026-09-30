@@ -14,7 +14,17 @@ plate_validator = RegexValidator(
 )
 
 
-class Office(models.Model):
+class TimeStampedModel(models.Model):
+    """Records when a row was created and when it last changed."""
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Office(TimeStampedModel):
     name = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
 
@@ -41,7 +51,7 @@ class VehicleQuerySet(models.QuerySet):
         return self.annotate(last_maintenance=Subquery(latest))
 
 
-class Vehicle(models.Model):
+class Vehicle(TimeStampedModel):
     vin = models.CharField(
         "VIN", max_length=17, unique=True, validators=[vin_validator]
     )
@@ -72,7 +82,7 @@ class Vehicle(models.Model):
         return f"{self.year} {self.make} {self.model} ({self.vin})"
 
 
-class Mechanic(models.Model):
+class Mechanic(TimeStampedModel):
     name = models.CharField(max_length=255)
     certification_number = models.CharField(max_length=64, unique=True)
     is_active = models.BooleanField(default=True)
@@ -84,7 +94,7 @@ class Mechanic(models.Model):
         return f"{self.name} ({self.certification_number})"
 
 
-class MaintenanceRecord(models.Model):
+class MaintenanceRecord(TimeStampedModel):
     class MaintenanceType(models.TextChoices):
         OIL_CHANGE = "oil_change", "Oil change"
         TIRE_SERVICE = "tire_service", "Tire service"
