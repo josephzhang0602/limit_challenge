@@ -4,10 +4,11 @@ import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } f
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect } from 'react';
 
+import Logo from '@/components/layout/Logo';
 import { useForm } from '@/lib/hooks/useForm';
 import { useLogin, useSession } from '@/lib/hooks/useSession';
 
-const HOME_PATH = '/vehicles';
+const HOME_PATH = '/dashboard';
 
 /**
  * Where to go after the login.
@@ -42,16 +43,27 @@ export default function LoginView() {
   };
 
   return (
-    <Box display="flex" alignItems="center" justifyContent="center" minHeight="100vh" px={2} py={4}>
+    <Box
+      component="main"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      minHeight="100vh"
+      px={2}
+      py={4}
+    >
       <Card variant="outlined" sx={{ width: '100%', maxWidth: 400 }}>
         <CardContent sx={{ p: 4 }}>
           <form onSubmit={handleSubmit} noValidate>
             <Stack spacing={2.5}>
+              <Logo />
               <div>
-                <Typography variant="h5" component="h1" fontWeight={700}>
-                  Fleet Tracker
+                <Typography variant="h5" component="h1">
+                  Log in
                 </Typography>
-                <Typography color="text.secondary">Log in to continue.</Typography>
+                <Typography color="text.secondary">
+                  Vehicles, offices and maintenance of the fleet.
+                </Typography>
               </div>
 
               {form.formError && <Alert severity="error">{form.formError}</Alert>}

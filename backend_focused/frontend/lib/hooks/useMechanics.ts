@@ -28,6 +28,21 @@ async function saveMechanic({ id, ...payload }: MechanicPayload & { id?: number 
   return response.data;
 }
 
+async function fetchActiveMechanicCount() {
+  // Only the total is needed, so ask for the smallest page.
+  const response = await apiClient.get<Paginated<Mechanic>>('/mechanics/', {
+    params: { is_active: true, page_size: 1 },
+  });
+  return response.data.count;
+}
+
+export function useActiveMechanicCount() {
+  return useQuery({
+    queryKey: [MECHANICS_QUERY_KEY, 'active-count'],
+    queryFn: fetchActiveMechanicCount,
+  });
+}
+
 /** Active mechanics, for the dropdown of the maintenance form. */
 export function useMechanicOptions() {
   return useQuery({
