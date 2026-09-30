@@ -8,6 +8,9 @@ export interface ApiError {
   status?: number;
 }
 
+/** Keys of an error answer that are for programs, not for people. */
+const TECHNICAL_KEYS = ['code', 'messages'];
+
 /**
  * Convert whatever a failed request threw into something the UI can show.
  *
@@ -32,6 +35,9 @@ export function parseApiError(error: unknown): ApiError {
 
   if (data && typeof data === 'object' && !Array.isArray(data)) {
     for (const [key, value] of Object.entries(data)) {
+      if (TECHNICAL_KEYS.includes(key)) {
+        continue;
+      }
       const text = Array.isArray(value) ? value.join(' ') : String(value);
       if (key === 'detail' || key === 'non_field_errors') {
         message = text;

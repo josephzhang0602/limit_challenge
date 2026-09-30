@@ -7,6 +7,22 @@ export interface Paginated<T> {
   results: T[];
 }
 
+export type Role = 'manager' | 'viewer';
+
+export interface User {
+  id: number;
+  username: string;
+  name: string;
+  role: Role;
+}
+
+/** The answer of the login, which is also what the browser stores. */
+export interface Session {
+  access: string;
+  refresh: string;
+  user: User;
+}
+
 export interface Office {
   id: number;
   name: string;
