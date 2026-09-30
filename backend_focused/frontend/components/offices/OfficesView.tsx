@@ -22,6 +22,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import { useNotify } from '@/components/NotificationProvider';
 import { EmptyState, ErrorState, TableSkeleton } from '@/components/StateViews';
 import { parseApiError } from '@/lib/errors';
+import { useSession } from '@/lib/hooks/useSession';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { useDeleteOffice, useOfficeSummary } from '@/lib/hooks/useOffices';
 import { OfficeSummary } from '@/lib/types';
@@ -32,6 +33,7 @@ const COLUMN_COUNT = 6;
 
 export default function OfficesView() {
   const notify = useNotify();
+  const { canEdit } = useSession();
   const summary = useOfficeSummary();
   const deleteOffice = useDeleteOffice();
 
@@ -63,9 +65,11 @@ export default function OfficesView() {
             Active vehicles and maintenance cost of each office in the last 12 months.
           </Typography>
         </div>
-        <Button variant="contained" onClick={() => setForm({})} sx={{ flexShrink: 0 }}>
-          New office
-        </Button>
+        {canEdit && (
+          <Button variant="contained" onClick={() => setForm({})} sx={{ flexShrink: 0 }}>
+            New office
+          </Button>
+        )}
       </Box>
 
       {summary.isError ? (
@@ -83,11 +87,13 @@ export default function OfficesView() {
                   <TableCell align="right">Active vehicles</TableCell>
                   <TableCell align="right">Cost, last 12 months</TableCell>
                   <TableCell>Last maintenance</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  {canEdit && <TableCell align="right">Actions</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {summary.isPending && <TableSkeleton columns={COLUMN_COUNT} />}
+                {summary.isPending && (
+                  <TableSkeleton columns={canEdit ? COLUMN_COUNT : COLUMN_COUNT - 1} />
+                )}
                 {offices.map((office) => (
                   <TableRow key={office.id} hover>
                     <TableCell>
@@ -101,14 +107,16 @@ export default function OfficesView() {
                       {formatCurrency(office.maintenance_cost_last_year)}
                     </TableCell>
                     <TableCell>{formatDate(office.last_maintenance)}</TableCell>
-                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                      <Button size="small" onClick={() => setForm({ office })}>
-                        Edit
-                      </Button>
-                      <Button size="small" color="error" onClick={() => setToDelete(office)}>
-                        Delete
-                      </Button>
-                    </TableCell>
+                    {canEdit && (
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        <Button size="small" onClick={() => setForm({ office })}>
+                          Edit
+                        </Button>
+                        <Button size="small" color="error" onClick={() => setToDelete(office)}>
+                          Delete
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -119,9 +127,11 @@ export default function OfficesView() {
               title="No offices yet"
               description="Create the first office to start assigning vehicles to it."
               action={
-                <Button variant="outlined" onClick={() => setForm({})}>
-                  New office
-                </Button>
+                canEdit && (
+                  <Button variant="outlined" onClick={() => setForm({})}>
+                    New office
+                  </Button>
+                )
               }
             />
           )}

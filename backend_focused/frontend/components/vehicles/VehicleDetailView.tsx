@@ -30,6 +30,7 @@ import { useNotify } from '@/components/NotificationProvider';
 import { EmptyState, ErrorState } from '@/components/StateViews';
 import { parseApiError } from '@/lib/errors';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { useSession } from '@/lib/hooks/useSession';
 import { useDeleteMaintenanceRecord } from '@/lib/hooks/useMaintenance';
 import { useDeleteVehicle, useVehicleDetail } from '@/lib/hooks/useVehicles';
 import { MAINTENANCE_TYPE_LABELS, MaintenanceEntry } from '@/lib/types';
@@ -64,6 +65,7 @@ export default function VehicleDetailView() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const notify = useNotify();
+  const { canEdit } = useSession();
 
   // The list sends its own query string, so "Back" returns to the same search.
   const from = useSearchParams().get('from');
@@ -168,33 +170,35 @@ export default function VehicleDetailView() {
             {vehicle.vin}
           </Typography>
         </div>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" onClick={() => setDialog({ kind: 'edit' })}>
-            Edit
-          </Button>
-          <Button variant="outlined" onClick={() => setDialog({ kind: 'assign' })}>
-            Move to office
-          </Button>
-          <Tooltip
-            title={
-              hasHistory
-                ? 'A vehicle with maintenance records cannot be deleted. Set it to inactive instead.'
-                : ''
-            }
-          >
-            {/* A disabled button has no mouse events, so the tooltip needs the span. */}
-            <span>
-              <Button
-                variant="outlined"
-                color="error"
-                disabled={hasHistory}
-                onClick={() => setDialog({ kind: 'delete' })}
-              >
-                Delete
-              </Button>
-            </span>
-          </Tooltip>
-        </Stack>
+        {canEdit && (
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" onClick={() => setDialog({ kind: 'edit' })}>
+              Edit
+            </Button>
+            <Button variant="outlined" onClick={() => setDialog({ kind: 'assign' })}>
+              Move to office
+            </Button>
+            <Tooltip
+              title={
+                hasHistory
+                  ? 'A vehicle with maintenance records cannot be deleted. Set it to inactive instead.'
+                  : ''
+              }
+            >
+              {/* A disabled button has no mouse events, so the tooltip needs the span. */}
+              <span>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  disabled={hasHistory}
+                  onClick={() => setDialog({ kind: 'delete' })}
+                >
+                  Delete
+                </Button>
+              </span>
+            </Tooltip>
+          </Stack>
+        )}
       </Box>
 
       <Card variant="outlined">
@@ -220,9 +224,11 @@ export default function VehicleDetailView() {
           <Typography variant="h6" component="h2">
             Maintenance history
           </Typography>
-          <Button variant="contained" size="small" onClick={() => setDialog({ kind: 'record' })}>
-            Record maintenance
-          </Button>
+          {canEdit && (
+            <Button variant="contained" size="small" onClick={() => setDialog({ kind: 'record' })}>
+              Record maintenance
+            </Button>
+          )}
         </Box>
 
         {!hasHistory ? (
@@ -241,7 +247,7 @@ export default function VehicleDetailView() {
                     <TableCell>Mechanic</TableCell>
                     <TableCell align="right">Cost</TableCell>
                     <TableCell>Notes</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+                    {canEdit && <TableCell align="right">Actions</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -261,18 +267,23 @@ export default function VehicleDetailView() {
                       </TableCell>
                       <TableCell align="right">{formatCurrency(record.cost)}</TableCell>
                       <TableCell sx={{ maxWidth: 280 }}>{record.notes}</TableCell>
-                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                        <Button size="small" onClick={() => setDialog({ kind: 'record', record })}>
-                          Edit
-                        </Button>
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={() => setDialog({ kind: 'delete-record', record })}
-                        >
-                          Delete
-                        </Button>
-                      </TableCell>
+                      {canEdit && (
+                        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                          <Button
+                            size="small"
+                            onClick={() => setDialog({ kind: 'record', record })}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => setDialog({ kind: 'delete-record', record })}
+                          >
+                            Delete
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

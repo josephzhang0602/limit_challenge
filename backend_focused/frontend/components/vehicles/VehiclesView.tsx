@@ -27,6 +27,7 @@ import { EmptyState, ErrorState, TableSkeleton } from '@/components/StateViews';
 import { parseApiError } from '@/lib/errors';
 import { formatDate } from '@/lib/format';
 import { useResetInvalidPage } from '@/lib/hooks/useResetInvalidPage';
+import { useSession } from '@/lib/hooks/useSession';
 import { useUrlState } from '@/lib/hooks/useUrlState';
 import { useDeleteVehicle, useVehicleList } from '@/lib/hooks/useVehicles';
 import { Vehicle, VehicleListParams } from '@/lib/types';
@@ -50,6 +51,7 @@ const COLUMNS: { label: string; ordering?: string }[] = [
 
 export default function VehiclesView() {
   const notify = useNotify();
+  const { canEdit } = useSession();
   const url = useUrlState();
 
   // Everything that decides what the list shows is read from the URL.
@@ -115,9 +117,11 @@ export default function VehiclesView() {
             Search the fleet, and open a vehicle to see its maintenance history.
           </Typography>
         </div>
-        <Button variant="contained" onClick={() => setForm({})} sx={{ flexShrink: 0 }}>
-          New vehicle
-        </Button>
+        {canEdit && (
+          <Button variant="contained" onClick={() => setForm({})} sx={{ flexShrink: 0 }}>
+            New vehicle
+          </Button>
+        )}
       </Box>
 
       <VehicleFilters
@@ -159,11 +163,13 @@ export default function VehiclesView() {
                       )}
                     </TableCell>
                   ))}
-                  <TableCell align="right">Actions</TableCell>
+                  {canEdit && <TableCell align="right">Actions</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {vehicles.isPending && <TableSkeleton columns={COLUMNS.length + 1} />}
+                {vehicles.isPending && (
+                  <TableSkeleton columns={COLUMNS.length + (canEdit ? 1 : 0)} />
+                )}
                 {rows.map((vehicle) => (
                   <TableRow key={vehicle.id} hover>
                     <TableCell sx={{ fontFamily: 'monospace' }}>
@@ -187,14 +193,16 @@ export default function VehiclesView() {
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>
                       {formatDate(vehicle.last_maintenance)}
                     </TableCell>
-                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                      <Button size="small" onClick={() => setForm({ vehicle })}>
-                        Edit
-                      </Button>
-                      <Button size="small" color="error" onClick={() => setToDelete(vehicle)}>
-                        Delete
-                      </Button>
-                    </TableCell>
+                    {canEdit && (
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        <Button size="small" onClick={() => setForm({ vehicle })}>
+                          Edit
+                        </Button>
+                        <Button size="small" color="error" onClick={() => setToDelete(vehicle)}>
+                          Delete
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -218,9 +226,11 @@ export default function VehiclesView() {
                 title="No vehicles yet"
                 description="Create the first vehicle of the fleet."
                 action={
-                  <Button variant="outlined" onClick={() => setForm({})}>
-                    New vehicle
-                  </Button>
+                  canEdit && (
+                    <Button variant="outlined" onClick={() => setForm({})}>
+                      New vehicle
+                    </Button>
+                  )
                 }
               />
             ))}

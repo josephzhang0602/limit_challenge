@@ -25,6 +25,7 @@ import { parseApiError } from '@/lib/errors';
 import { formatCurrency } from '@/lib/format';
 import { useDeleteMechanic, useMechanicWorkload } from '@/lib/hooks/useMechanics';
 import { useResetInvalidPage } from '@/lib/hooks/useResetInvalidPage';
+import { useSession } from '@/lib/hooks/useSession';
 import { useUrlState } from '@/lib/hooks/useUrlState';
 import { MechanicWorkload } from '@/lib/types';
 
@@ -35,6 +36,7 @@ const PAGE_SIZES = [10, 25, 50];
 
 export default function MechanicsView() {
   const notify = useNotify();
+  const { canEdit } = useSession();
   const url = useUrlState();
   const page = Number(url.get('page')) || 1;
   const pageSize = Number(url.get('page_size')) || PAGE_SIZES[0];
@@ -70,9 +72,11 @@ export default function MechanicsView() {
             Work completed this year, from the busiest mechanic to the least busy.
           </Typography>
         </div>
-        <Button variant="contained" onClick={() => setForm({})} sx={{ flexShrink: 0 }}>
-          New mechanic
-        </Button>
+        {canEdit && (
+          <Button variant="contained" onClick={() => setForm({})} sx={{ flexShrink: 0 }}>
+            New mechanic
+          </Button>
+        )}
       </Box>
 
       {workload.isError ? (
@@ -89,11 +93,13 @@ export default function MechanicsView() {
                   <TableCell>Status</TableCell>
                   <TableCell align="right">Jobs this year</TableCell>
                   <TableCell align="right">Cost this year</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  {canEdit && <TableCell align="right">Actions</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {workload.isPending && <TableSkeleton columns={COLUMN_COUNT} />}
+                {workload.isPending && (
+                  <TableSkeleton columns={canEdit ? COLUMN_COUNT : COLUMN_COUNT - 1} />
+                )}
                 {mechanics.map((mechanic) => (
                   <TableRow key={mechanic.id} hover>
                     <TableCell>{mechanic.name}</TableCell>
@@ -108,14 +114,16 @@ export default function MechanicsView() {
                     </TableCell>
                     <TableCell align="right">{mechanic.maintenance_count}</TableCell>
                     <TableCell align="right">{formatCurrency(mechanic.total_cost)}</TableCell>
-                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                      <Button size="small" onClick={() => setForm({ mechanic })}>
-                        Edit
-                      </Button>
-                      <Button size="small" color="error" onClick={() => setToDelete(mechanic)}>
-                        Delete
-                      </Button>
-                    </TableCell>
+                    {canEdit && (
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        <Button size="small" onClick={() => setForm({ mechanic })}>
+                          Edit
+                        </Button>
+                        <Button size="small" color="error" onClick={() => setToDelete(mechanic)}>
+                          Delete
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -126,9 +134,11 @@ export default function MechanicsView() {
               title="No mechanics yet"
               description="Create a mechanic to start recording maintenance."
               action={
-                <Button variant="outlined" onClick={() => setForm({})}>
-                  New mechanic
-                </Button>
+                canEdit && (
+                  <Button variant="outlined" onClick={() => setForm({})}>
+                    New mechanic
+                  </Button>
+                )
               }
             />
           )}
