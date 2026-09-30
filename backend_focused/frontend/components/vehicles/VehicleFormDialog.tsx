@@ -1,8 +1,8 @@
 'use client';
 
-import { Box, FormControlLabel, MenuItem, Switch, TextField } from '@mui/material';
+import { Box, FormControlLabel, MenuItem, Switch, TextField, Typography } from '@mui/material';
 
-import FormDialog from '@/components/FormDialog';
+import FormDialog, { FormSection } from '@/components/FormDialog';
 import { useNotify } from '@/components/NotificationProvider';
 import { optionalNumber } from '@/lib/format';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
@@ -94,76 +94,98 @@ export default function VehicleFormDialog({ vehicle, onClose }: VehicleFormDialo
       onSubmit={handleSubmit}
       onClose={onClose}
     >
-      <TextField
-        label="VIN"
-        value={values.vin}
-        onChange={(event) => form.setField('vin', event.target.value.toUpperCase())}
-        required
-        autoFocus
-        fullWidth
-        slotProps={{ htmlInput: { maxLength: VIN_LENGTH, style: { fontFamily: 'monospace' } } }}
-        {...vinProps}
-      />
-      <TextField
-        label="License plate"
-        value={values.license_plate}
-        onChange={(event) => form.setField('license_plate', event.target.value.toUpperCase())}
-        required
-        fullWidth
-        {...plateProps}
-      />
-      <Box display="grid" gap={2} gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr 120px' }}>
+      <FormSection title="Identification">
         <TextField
-          label="Make"
-          value={values.make}
-          onChange={(event) => form.setField('make', event.target.value)}
+          label="VIN"
+          value={values.vin}
+          onChange={(event) => form.setField('vin', event.target.value.toUpperCase())}
           required
-          {...form.errorProps('make')}
+          autoFocus
+          fullWidth
+          slotProps={{
+            htmlInput: {
+              maxLength: VIN_LENGTH,
+              style: { fontFamily: 'var(--font-geist-mono)', letterSpacing: '0.05em' },
+            },
+          }}
+          {...vinProps}
         />
         <TextField
-          label="Model"
-          value={values.model}
-          onChange={(event) => form.setField('model', event.target.value)}
+          label="License plate"
+          value={values.license_plate}
+          onChange={(event) => form.setField('license_plate', event.target.value.toUpperCase())}
           required
-          {...form.errorProps('model')}
+          fullWidth
+          {...plateProps}
         />
-        <TextField
-          label="Year"
-          type="number"
-          value={values.year}
-          onChange={(event) => form.setField('year', event.target.value)}
-          required
-          {...form.errorProps('year')}
-        />
-      </Box>
-      <TextField
-        select
-        label="Office"
-        value={offices.data ? values.office_id : ''}
-        onChange={(event) => form.setField('office_id', event.target.value)}
-        required
-        fullWidth
-        disabled={offices.isPending}
-        {...form.errorProps(
-          'office_id',
-          offices.data?.length === 0 ? 'Create an office first.' : undefined,
-        )}
-      >
-        {(offices.data ?? []).map((office) => (
-          <MenuItem key={office.id} value={String(office.id)}>
-            {office.name} ({office.city})
-          </MenuItem>
-        ))}
-      </TextField>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={values.is_active}
-            onChange={(event) => form.setField('is_active', event.target.checked)}
+      </FormSection>
+
+      <FormSection title="Vehicle">
+        <Box display="grid" gap={2} gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr 120px' }}>
+          <TextField
+            label="Make"
+            value={values.make}
+            onChange={(event) => form.setField('make', event.target.value)}
+            required
+            {...form.errorProps('make')}
           />
-        }
-        label={values.is_active ? 'Active' : 'Inactive'}
-      />
+          <TextField
+            label="Model"
+            value={values.model}
+            onChange={(event) => form.setField('model', event.target.value)}
+            required
+            {...form.errorProps('model')}
+          />
+          <TextField
+            label="Year"
+            type="number"
+            value={values.year}
+            onChange={(event) => form.setField('year', event.target.value)}
+            required
+            {...form.errorProps('year')}
+          />
+        </Box>
+      </FormSection>
+
+      <FormSection title="Assignment">
+        <TextField
+          select
+          label="Office"
+          value={offices.data ? values.office_id : ''}
+          onChange={(event) => form.setField('office_id', event.target.value)}
+          required
+          fullWidth
+          disabled={offices.isPending || Boolean(vehicle)}
+          {...form.errorProps(
+            'office_id',
+            vehicle
+              ? 'To change the office, use "Move to office".'
+              : offices.data?.length === 0
+                ? 'Create an office first.'
+                : undefined,
+          )}
+        >
+          {(offices.data ?? []).map((office) => (
+            <MenuItem key={office.id} value={String(office.id)}>
+              {office.name} ({office.city})
+            </MenuItem>
+          ))}
+        </TextField>
+        <Box>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={values.is_active}
+                onChange={(event) => form.setField('is_active', event.target.checked)}
+              />
+            }
+            label={values.is_active ? 'Active' : 'Inactive'}
+          />
+          <Typography variant="body2" color="text.secondary">
+            Inactive vehicles keep their history, and their plate can be given to another vehicle.
+          </Typography>
+        </Box>
+      </FormSection>
     </FormDialog>
   );
 }
