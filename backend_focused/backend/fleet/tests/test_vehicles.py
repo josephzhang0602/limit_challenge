@@ -2,10 +2,10 @@ from decimal import Decimal
 
 from django.db import IntegrityError, transaction
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from fleet import models
 
+from .base import ApiTestCase
 from .factories import days_ago, make_mechanic, make_office, make_record, make_vehicle
 
 VEHICLES_URL = "/api/vehicles/"
@@ -19,8 +19,9 @@ def result_ids(response):
     return [item["id"] for item in response.data["results"]]
 
 
-class VehicleCrudTests(APITestCase):
+class VehicleCrudTests(ApiTestCase):
     def setUp(self):
+        super().setUp()
         self.office = make_office()
         self.payload = {
             "vin": "1hgcm82633a004352",
@@ -84,8 +85,9 @@ class VehicleCrudTests(APITestCase):
         self.assertTrue(models.Vehicle.objects.filter(pk=vehicle.pk).exists())
 
 
-class LicensePlateRuleTests(APITestCase):
+class LicensePlateRuleTests(ApiTestCase):
     def setUp(self):
+        super().setUp()
         self.office = make_office()
         self.payload = {
             "vin": "1HGCM82633A004352",
@@ -142,7 +144,7 @@ class LicensePlateRuleTests(APITestCase):
             make_vehicle(license_plate="ABC-123")
 
 
-class VehicleSearchTests(APITestCase):
+class VehicleSearchTests(ApiTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.north = make_office(name="North")
@@ -229,7 +231,7 @@ class VehicleSearchTests(APITestCase):
         self.assertEqual(len(response.data["results"]), 15)
 
 
-class VehicleDetailTests(APITestCase):
+class VehicleDetailTests(ApiTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.vehicle = make_vehicle()
@@ -290,8 +292,9 @@ class VehicleDetailTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class AssignVehicleTests(APITestCase):
+class AssignVehicleTests(ApiTestCase):
     def setUp(self):
+        super().setUp()
         self.origin = make_office(name="Origin")
         self.destination = make_office(name="Destination")
         self.vehicle = make_vehicle(office=self.origin, make="Ford")
@@ -332,7 +335,7 @@ class AssignVehicleTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class VehiclesNeedingMaintenanceTests(APITestCase):
+class VehiclesNeedingMaintenanceTests(ApiTestCase):
     URL = f"{VEHICLES_URL}needing-maintenance/"
 
     @classmethod
@@ -367,7 +370,7 @@ class VehiclesNeedingMaintenanceTests(APITestCase):
         self.assertEqual(result_ids(response), [self.overdue.pk])
 
 
-class DuplicateCheckTests(APITestCase):
+class DuplicateCheckTests(ApiTestCase):
     URL = f"{VEHICLES_URL}duplicate-check/"
 
     @classmethod

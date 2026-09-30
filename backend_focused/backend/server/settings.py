@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
+from datetime import timedelta
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -45,7 +47,7 @@ DEBUG = env_bool('DJANGO_DEBUG', True)
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', DEVELOPMENT_SECRET_KEY)
 
-# The development key is public.
+# The development key is public, and it signs the login tokens.
 if not DEBUG and SECRET_KEY == DEVELOPMENT_SECRET_KEY:
     raise ImproperlyConfigured('Set DJANGO_SECRET_KEY when DJANGO_DEBUG is off.')
 
@@ -77,8 +79,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'drf_spectacular',
+    'accounts',
     'fleet',
 ]
 
@@ -143,6 +147,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Real password hashing is slow on purpose. Tests create many users and do not
+# need that protection.
+if 'test' in sys.argv:
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -169,6 +179,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # API
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # Tokens for the frontend and other clients.
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # The session of the admin site, so the browsable API works after login.
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'accounts.permissions.IsManagerOrReadOnly',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.environ.get('THROTTLE_ANON', '60/min'),
+        'user': os.environ.get('THROTTLE_USER', '1000/min'),
+        # Slows down password guessing.
+        'login': os.environ.get('THROTTLE_LOGIN', '10/min'),
+    },
     'DEFAULT_PAGINATION_CLASS': 'fleet.pagination.StandardPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
@@ -183,6 +212,14 @@ REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False,
     'EXCEPTION_HANDLER': 'fleet.exceptions.api_exception_handler',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SIMPLE_JWT = {
+    # Short, because an access token cannot be cancelled once it is issued.
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    # Long, so the user stays logged in. It is cancelled on logout.
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'UPDATE_LAST_LOGIN': True,
 }
 
 SPECTACULAR_SETTINGS = {

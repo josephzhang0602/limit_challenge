@@ -3,15 +3,15 @@ from decimal import Decimal
 
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase
 
+from .base import ApiTestCase
 from .factories import make_mechanic, make_record, make_vehicle
 
 MECHANICS_URL = "/api/mechanics/"
 WORKLOAD_URL = f"{MECHANICS_URL}workload/"
 
 
-class MechanicCrudTests(APITestCase):
+class MechanicCrudTests(ApiTestCase):
     def test_create_normalises_certification_number(self):
         response = self.client.post(
             MECHANICS_URL, {"name": "Alice", "certification_number": "ase-1"}, format="json"
@@ -50,7 +50,7 @@ class MechanicCrudTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
 
-class MechanicWorkloadTests(APITestCase):
+class MechanicWorkloadTests(ApiTestCase):
     @classmethod
     def setUpTestData(cls):
         # Every date is on or before today, whatever day the tests run on.

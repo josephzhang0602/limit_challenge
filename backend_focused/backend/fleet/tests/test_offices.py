@@ -1,17 +1,17 @@
 from decimal import Decimal
 
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from fleet import models
 
+from .base import ApiTestCase
 from .factories import days_ago, make_office, make_record, make_vehicle
 
 OFFICES_URL = "/api/offices/"
 SUMMARY_URL = f"{OFFICES_URL}summary/"
 
 
-class OfficeCrudTests(APITestCase):
+class OfficeCrudTests(ApiTestCase):
     def test_create_list_update_delete(self):
         created = self.client.post(OFFICES_URL, {"name": "HQ", "city": "Austin"}, format="json")
         self.assertEqual(created.status_code, status.HTTP_201_CREATED)
@@ -42,7 +42,7 @@ class OfficeCrudTests(APITestCase):
         self.assertIn("detail", response.data)
 
 
-class OfficeSummaryTests(APITestCase):
+class OfficeSummaryTests(ApiTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.busy = make_office(name="Busy", city="Austin")

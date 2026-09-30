@@ -3,15 +3,16 @@ from decimal import Decimal
 
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase
 
+from .base import ApiTestCase
 from .factories import days_ago, make_mechanic, make_record, make_vehicle
 
 RECORDS_URL = "/api/maintenance-records/"
 
 
-class MaintenanceRecordTests(APITestCase):
+class MaintenanceRecordTests(ApiTestCase):
     def setUp(self):
+        super().setUp()
         self.vehicle = make_vehicle()
         self.mechanic = make_mechanic()
         self.payload = {

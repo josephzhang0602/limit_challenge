@@ -1,8 +1,10 @@
+import os
 import random
 import re
 from datetime import timedelta
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -38,6 +40,12 @@ COST_RANGES = {
 OFFICE_SUFFIXES = ["Depot", "Hub", "Service Center", "Terminal"]
 HEAVY_HISTORY_SIZE = 350
 
+# username, first name, last name, can change data
+DEMO_USERS = [
+    ("manager", "Morgan", "Manager", True),
+    ("viewer", "Val", "Viewer", False),
+]
+
 
 class Command(BaseCommand):
     help = "Fill the database with dummy fleet data for manual testing"
@@ -59,6 +67,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # Users first, so they exist even when the fleet data is kept.
+        self.create_demo_users()
+
         if models.Office.objects.exists() or models.Mechanic.objects.exists():
             if not options["force"]:
                 self.stdout.write(
@@ -87,6 +98,21 @@ class Command(BaseCommand):
                 f"Seed data created: {len(offices)} offices, {len(mechanics)} mechanics, "
                 f"{len(vehicles)} vehicles, {len(records)} maintenance records."
             )
+        )
+
+    def create_demo_users(self):
+        """Create one user for each role, to try the application."""
+        password = os.environ.get("SEED_USER_PASSWORD", "fleet-demo-2026")
+        User = get_user_model()
+        for username, first_name, last_name, is_manager in DEMO_USERS:
+            user, _ = User.objects.get_or_create(username=username)
+            user.first_name = first_name
+            user.last_name = last_name
+            user.is_staff = is_manager
+            user.set_password(password)
+            user.save()
+        self.stdout.write(
+            f"Demo users: manager and viewer, both with the password {password!r}."
         )
 
     def clear(self):
