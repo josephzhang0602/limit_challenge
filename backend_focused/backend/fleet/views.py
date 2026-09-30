@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.db.models import Count, DecimalField, F, Max, Prefetch, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -29,6 +30,7 @@ class OfficeViewSet(viewsets.ModelViewSet):
     filterset_fields = ["city"]
     ordering_fields = ["name", "city"]
 
+    @extend_schema(responses=serializers.OfficeSummarySerializer(many=True))
     @action(detail=False, pagination_class=None, filter_backends=[])
     def summary(self, request):
         since = timezone.localdate() - MAINTENANCE_INTERVAL
@@ -75,7 +77,8 @@ class VehicleViewSet(viewsets.ModelViewSet):
             return serializers.MaintenanceHistorySerializer
         return serializers.VehicleSerializer
 
-    @action(detail=True, url_path="maintenance-history")
+    @extend_schema(responses=serializers.MaintenanceHistorySerializer(many=True))
+    @action(detail=True, url_path="maintenance-history", filter_backends=[])
     def maintenance_history(self, request, pk=None):
         vehicle = self.get_object()
         records = vehicle.maintenance_records.select_related("mechanic").order_by(
@@ -85,6 +88,10 @@ class VehicleViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
+    @extend_schema(
+        request=serializers.AssignVehicleSerializer,
+        responses=serializers.VehicleSerializer,
+    )
     @action(detail=True, methods=["post"])
     def assign(self, request, pk=None):
         vehicle = self.get_object()
@@ -96,6 +103,7 @@ class VehicleViewSet(viewsets.ModelViewSet):
         vehicle.save(update_fields=["office"])
         return Response(serializers.VehicleSerializer(vehicle).data)
 
+    @extend_schema(responses=serializers.VehicleSerializer(many=True))
     @action(detail=False, url_path="needing-maintenance")
     def needing_maintenance(self, request):
         cutoff = timezone.localdate() - MAINTENANCE_INTERVAL
@@ -110,6 +118,10 @@ class VehicleViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
+    @extend_schema(
+        parameters=[serializers.DuplicateCheckSerializer],
+        responses=serializers.DuplicateCheckResultSerializer,
+    )
     @action(detail=False, url_path="duplicate-check", pagination_class=None, filter_backends=[])
     def duplicate_check(self, request):
         params = serializers.DuplicateCheckSerializer(data=request.query_params)
@@ -139,6 +151,7 @@ class MechanicViewSet(viewsets.ModelViewSet):
     filterset_fields = ["is_active"]
     ordering_fields = ["name", "certification_number"]
 
+    @extend_schema(responses=serializers.MechanicWorkloadSerializer(many=True))
     @action(detail=False, filter_backends=[])
     def workload(self, request):
         this_year = Q(maintenance_records__maintenance_date__year=timezone.localdate().year)

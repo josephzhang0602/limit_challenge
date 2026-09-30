@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'django_filters',
+    'drf_spectacular',
     'fleet',
 ]
 
@@ -181,6 +182,15 @@ REST_FRAMEWORK = {
     # The challenge examples show costs as JSON numbers (81250.50), not strings.
     'COERCE_DECIMAL_TO_STRING': False,
     'EXCEPTION_HANDLER': 'fleet.exceptions.api_exception_handler',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Fleet Maintenance API',
+    'DESCRIPTION': 'Vehicles, offices, mechanics and maintenance history of a fleet.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 
