@@ -32,7 +32,8 @@ No configuration is needed for local development. The variables that can be set 
 
 ### Frontend
 
-Requires Node.js 20.9 or newer.
+Requires Node.js 24, the version in `frontend/.nvmrc`. With Node 20.9 or 22, use `npm install`
+instead of `npm ci`: their npm reads the lock file differently.
 
 ```bash
 cd frontend
@@ -78,7 +79,7 @@ cd backend
 python manage.py test            # 89 tests, under a second
 
 cd frontend
-npm test                         # 25 unit tests
+npm test                         # 30 unit tests
 npm run lint                     # ESLint
 npm run format                   # Prettier
 npm run typecheck                # TypeScript
@@ -91,7 +92,7 @@ The same checks run on every push, in GitHub Actions (`.github/workflows/ci.yml`
 | --- | --- |
 | `backend/fleet/tests/` | Every endpoint, the business rules, and the number of queries |
 | `backend/accounts/tests/` | Login, tokens, logout, roles, rate limit of the login |
-| `frontend/lib/*.test.ts` | Renewal of expired tokens, the stored session, error parsing, formatting |
+| `frontend/lib/*.test.ts` | Renewal of expired tokens, the stored session, error parsing, formatting, the overdue rule |
 
 ## API reference
 
@@ -194,10 +195,15 @@ to show a name:
 | Screen | Address | Endpoints used |
 | --- | --- | --- |
 | Login | `/login` | Login |
+| Dashboard | `/dashboard` | Office summary, vehicles needing maintenance, mechanic workload, mechanics |
 | Vehicles | `/vehicles` | Vehicle search, vehicles needing maintenance, vehicle CRUD, duplicate check |
 | Vehicle | `/vehicles/{id}` | Vehicle details, assign vehicle, maintenance record CRUD |
 | Offices | `/offices` | Office summary, office CRUD |
 | Mechanics | `/mechanics` | Mechanic workload, mechanic CRUD |
+
+The dashboard is the home page. It is built only from endpoints that the challenge asks for: the
+numbers, the chart of cost by office, the most overdue vehicles and the busiest mechanics need no
+endpoint of their own.
 
 What to look at:
 
@@ -219,8 +225,19 @@ What to look at:
 - **The session renews itself.** When the access token expires, the frontend gets a new one and
   repeats the request. The user notices nothing, and logs in again only after 7 days or a logout.
 - **A login returns to the page that was asked for**, including its filters.
-- **A viewer sees no control that changes data.** The buttons and the actions column are not
+- **A viewer sees no control that changes data.** The buttons and the action menus are not
   rendered. This is for clarity only: the API refuses the change whatever the screen shows.
+- **One action menu per row**, instead of several buttons. An action that cannot succeed is
+  disabled in the menu, with the reason next to it.
+- **Overdue vehicles stand out.** A badge in the list, a warning on the vehicle page with a
+  button to record the maintenance, and a card on the dashboard. The rule is the same as the API
+  uses, so the badge agrees with the "Needs maintenance" filter.
+- **Works on a phone.** Below 900 pixels the navigation becomes a menu, lists become cards, the
+  filters open in a panel, and forms fill the screen.
+- **Light and dark mode.** The choice is remembered, and it is applied before the first paint, so
+  a page never flashes the wrong colors.
+- **Accessible.** Every icon button has a label for screen readers, the keyboard focus is
+  visible, and an automated check (axe) reports no issue on any screen, in both modes.
 
 ## Assumptions
 
@@ -343,6 +360,19 @@ history endpoint instead.
 The office and mechanic dropdowns load one page of 100. A larger company would need a dropdown
 that searches while the user types.
 
+### Frontend: the page is chosen by the width of the screen
+
+On a phone the lists are cards, and on a computer they are tables. The page asks the browser for
+the width and renders one of the two, instead of rendering both and hiding one with CSS. This
+halves the elements on the page. It is possible because the pages are only rendered in the
+browser, after the session is known, so the server never has to guess the width.
+
+### Frontend: dates use the date picker of the browser
+
+The date fields are native date inputs. The browser shows its own calendar, in the language and
+format of the user, and the phone shows its native picker. A date picker library would look the
+same everywhere, but it is a large dependency for four fields.
+
 ### Not included
 
 - **Assignment history.** Excluded by the challenge. It would be a separate table written by the
@@ -374,6 +404,8 @@ that searches while the user types.
   Windows, and `npm run lint` reported every line of every file.
 - `frontend/app/globals.css`: removed the colors of the Next.js template. The Material UI theme
   sets them.
+- `frontend/package.json`: added `@mui/icons-material` for the icons and `@mui/x-charts` for the
+  chart of the dashboard. Both are from the makers of Material UI, so they follow the same theme.
 
 ## Project layout
 
@@ -398,7 +430,10 @@ backend/
 
 frontend/
   app/               One folder per address. Each page only renders its view.
-  components/        The views, the forms and the shared pieces (dialogs, empty and error states)
+  components/        The views and forms of each screen, and the shared pieces: page header,
+                     action menu, badges, dialogs, empty and error states
+  components/layout/ Sidebar, top bar, account menu, light and dark switch
   lib/hooks/         Data fetching with React Query, one file per resource, URL state, session
-  lib/               API client with token renewal, stored session, types, error parsing, formatting
+  lib/               API client with token renewal, stored session, theme, types, error parsing,
+                     formatting, vehicle rules (overdue)
 ```
