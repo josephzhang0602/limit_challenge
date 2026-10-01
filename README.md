@@ -8,6 +8,7 @@ full version of each, with the API reference, is in
 
 | What | Where |
 | --- | --- |
+| Demo video (2 minutes) | [Watch on Loom](https://www.loom.com/share/f8b424bf31a64682983e4628e7d50f87) |
 | Full solution notes | [backend_focused/SOLUTION.md](backend_focused/SOLUTION.md) |
 | The challenge statement | [backend_focused/README.md](backend_focused/README.md) |
 | API (Django, Django REST Framework) | [backend_focused/backend/](backend_focused/backend/) |
