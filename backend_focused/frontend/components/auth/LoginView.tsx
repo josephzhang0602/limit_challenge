@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import { visuallyHidden } from '@mui/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect } from 'react';
 
@@ -56,15 +57,18 @@ export default function LoginView() {
         <CardContent sx={{ p: 4 }}>
           <form onSubmit={handleSubmit} noValidate>
             <Stack spacing={2.5}>
-              <Logo />
-              <div>
-                <Typography variant="h5" component="h1">
+              <Box display="flex" justifyContent="center">
+                <Logo />
+              </Box>
+              <Box textAlign="center">
+                {/* Not shown, but announced by screen readers: every page needs one main heading. */}
+                <Typography component="h1" sx={visuallyHidden}>
                   Log in
                 </Typography>
                 <Typography color="text.secondary">
-                  Vehicles, offices and maintenance of the fleet.
+                  Manage vehicles, offices and maintenance.
                 </Typography>
-              </div>
+              </Box>
 
               {form.formError && <Alert severity="error">{form.formError}</Alert>}
 
@@ -94,6 +98,8 @@ export default function LoginView() {
                 size="large"
                 loading={login.isPending || status === 'authenticated'}
                 fullWidth
+                // The same height as the text fields above it.
+                sx={{ height: 56 }}
               >
                 Log in
               </Button>
